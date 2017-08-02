@@ -3,11 +3,13 @@ package com.cchi.auth;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Resource;
+import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
@@ -19,7 +21,7 @@ import com.cchi.auth.TripleDESUtil;
 @WebService(endpointInterface = "com.cchi.auth.CCHIService")
 public class CCHIServiceImpl implements CCHIService {
 	
-	  @Resource
+    @Resource
     WebServiceContext wsctx;
     
 	@Override
@@ -107,6 +109,8 @@ public class CCHIServiceImpl implements CCHIService {
 		if (companyName.equals(_Company) 
 				&& serviceName.equals(_Service)
 				&& accessToken.equals(_AccessToken)) {
+			// getBeneficiaryDetails(); 
+			// need to search for maintaining session during the soap request calls
 			return "Hello World JAX-WS! Valid User";
 		} else {
 			return "Unknown User";
@@ -123,6 +127,53 @@ public class CCHIServiceImpl implements CCHIService {
 			e.printStackTrace();
 		}
 		return encodedAccessToken;
+	}
+
+	List<Beneficiary> beneficiaryList = new ArrayList<Beneficiary>();
+	
+	@Override
+	public List<Beneficiary> getBeneficiaryDetails(String visaNumber,
+			String passportNumber) {
+		List<Beneficiary> benefDetails = new ArrayList<Beneficiary>();
+		
+		
+		Beneficiary benefName = null;
+	        boolean isValidBeneficiary = false;
+	        for (int i = 0; i < beneficiaryList.size(); i++) {
+	        	benefName = beneficiaryList.get(i);
+	           
+	        	if (benefName.getPassportNumber().equals(passportNumber)) {
+	                System.out.println("param found: " + benefName.getPassportNumber());
+	            }
+	        	
+	        	if (benefName.getVisaNumber().equals(visaNumber)) {
+	                System.out.println("param found: " + benefName.getVisaNumber());
+	            }
+	        	
+	        	if (benefName.getVisaNumber().equals(visaNumber) 
+	        			&& benefName.getPassportNumber().equals(passportNumber)) {
+	        		isValidBeneficiary = true;
+	        		benefDetails.add(benefName);
+	            }
+
+	        }
+	        
+	        if (isValidBeneficiary) {
+	        	return benefDetails;
+	        } else {
+	        	return null;
+	        }
+	}
+	
+	@Override
+	public boolean addBeneficiary(@WebParam(partName = "name") String name,
+			@WebParam(partName = "email") String email,
+			@WebParam(partName = "pass") String passportNumber,
+			@WebParam(partName = "visa") String visaNumber) {
+
+		beneficiaryList.add(new Beneficiary(name, email, passportNumber,
+				visaNumber));
+		return true;
 	}
 
 }
